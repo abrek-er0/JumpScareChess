@@ -1,5 +1,5 @@
 import { Chess, DEFAULT_POSITION } from '../vendor/chess.js';
-import { chooseBestMove, fromUci, prepareAnalysis, toUci } from './engine.js';
+import { chooseBestMove, COMPUTER_MOVE_RANGE_CP, fromUci, prepareAnalysis, toUci } from './engine.js';
 
 export const OPENING_DEPTH = 18;
 export const OPENING_BUILD = '19.0.0-full';
@@ -66,7 +66,7 @@ export class OpeningBook {
     if (!root) return null;
     const position = new Chess();
     if (side === 'w') return { position, analysis: root };
-    const move = chooseBestMove(root, random);
+    const move = chooseBestMove(root, random, COMPUTER_MOVE_RANGE_CP);
     position.move(fromUci(move));
     return { position, move, analysis: this.positions.get(move) };
   }

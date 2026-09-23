@@ -33,13 +33,16 @@ test('Shipped Stockfish book covers all 420 first-turn evaluations at maximum ap
 test('White and Black can restart repeatedly using the same ready opening scores', () => {
   const openings = book();
   const root = openings.get(new Chess());
+  const selectedOpenings = new Set();
   for (let attempt = 0; attempt < 100; attempt++) {
     const white = openings.start('w');
     const black = openings.start('b', () => attempt / 100);
     assert(white.analysis === root && white.position.turn() === 'w', 'White opening was rebuilt');
     assert(black.analysis === openings.positions.get(black.move) && black.position.turn() === 'b', 'Black opening was filled on demand');
-    assert(scoreValue(root.scores.get(black.move)) === scoreValue(root.best), 'Computer selected a move outside the exact best ties');
+    assert(scoreValue(root.best) - scoreValue(root.scores.get(black.move)) <= 10, 'Computer selected a move outside the opening range');
+    selectedOpenings.add(black.move);
   }
+  assert(selectedOpenings.size === 4, 'Expected all four close opening moves to be selectable');
   assert(openings.positions.size === 21, 'Restarts modified the opening bank');
 });
 

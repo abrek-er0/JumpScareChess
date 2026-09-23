@@ -1,5 +1,5 @@
 import { Chess } from '../vendor/chess.js';
-import { chooseBestMove, moveLoss, parseInfo, prepareAnalysis, scoreValue, toUci } from '../src/engine.js';
+import { chooseBestMove, COMPUTER_MOVE_RANGE_CP, moveLoss, parseInfo, prepareAnalysis, scoreValue, toUci } from '../src/engine.js';
 import { captureDecision, PracticeHistory, HISTORY_KEY, previewAlternative } from '../src/history.js';
 import { describeMove, evaluationDisplay, scoreAfterMove, formatCentipawnChange } from '../src/feedback.js';
 import { choosePlayerSide } from '../src/turns.js';
@@ -64,6 +64,22 @@ test('Random replies honor exact negative scores for Black and mate distances', 
   assert(chooseBestMove({ scores, best: scores.get('e7e5') }, () => .9) === 'c7c5', 'Scores were flipped for Black');
   const mates = new Map([['e7e5', { type: 'mate', value: 2 }], ['c7c5', { type: 'mate', value: 3 }]]);
   assert(chooseBestMove({ scores: mates, best: mates.get('e7e5') }, () => .9) === 'e7e5', 'Different mate distances are not exact ties');
+});
+
+test('Computer opening range includes close moves but excludes worse moves and mate scores', () => {
+  const scores = new Map([
+    ['d2d4', { type: 'cp', value: 29 }],
+    ['e2e4', { type: 'cp', value: 27 }],
+    ['g1f3', { type: 'cp', value: 25 }],
+    ['c2c4', { type: 'cp', value: 20 }],
+    ['g2g3', { type: 'cp', value: 16 }],
+  ]);
+  const analysis = { scores, best: scores.get('d2d4') };
+  assert(COMPUTER_MOVE_RANGE_CP === 10, 'Unexpected computer move range');
+  assert(chooseBestMove(analysis, () => 0, COMPUTER_MOVE_RANGE_CP) === 'd2d4', 'Best move omitted');
+  assert(chooseBestMove(analysis, () => .99, COMPUTER_MOVE_RANGE_CP) === 'c2c4', 'Last close move unavailable or worse move included');
+  const mates = new Map([['e2e4', { type: 'mate', value: 2 }], ['d2d4', { type: 'mate', value: 3 }]]);
+  assert(chooseBestMove({ scores: mates, best: mates.get('e2e4') }, () => .99, COMPUTER_MOVE_RANGE_CP) === 'e2e4', 'Mate distance was treated as centipawns');
 });
 
 test('Move loss treats preserving a forced mate as safe', () => {

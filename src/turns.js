@@ -1,5 +1,5 @@
 import { Chess } from '../vendor/chess.js';
-import { chooseBestMove, fromUci } from './engine.js';
+import { chooseBestMove, COMPUTER_MOVE_RANGE_CP, fromUci } from './engine.js';
 
 // Resolve the preference once per new game; the actual side stays fixed until
 // the next restart, including while changing depth or retrying analysis.
@@ -25,7 +25,7 @@ export async function prepareComputerTurn(game, { analyze, isCurrent = () => tru
   if (!isCurrent() || !choices) return null;
 
   // Choose once, then preload exactly that resulting position before revealing it.
-  const move = chooseBestMove(choices, random);
+  const move = chooseBestMove(choices, random, COMPUTER_MOVE_RANGE_CP);
   position.move(fromUci(move));
   if (position.isGameOver()) return { position, move, analysis: null };
 

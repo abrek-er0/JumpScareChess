@@ -227,6 +227,7 @@ async function prepareTurn(token = version) {
       // one synchronous update. Never show the new board followed by a search.
       game = prepared.position;
       audio.move();
+      if (prepared.analysis) setEvaluation(prepared.analysis.best);
       if (!finishIfOver()) enablePlayerTurn(prepared.analysis);
     } else {
       // A depth change later in the game may require fresh analysis.
@@ -239,6 +240,7 @@ async function prepareTurn(token = version) {
 
 function startOpening(opening) {
   game = opening.position;
+  if (opening.move) setEvaluation(opening.analysis.best);
   enablePlayerTurn(opening.analysis);
   // Load the engine for later turns in the background. The initial board and
   // its complete evaluations are already usable without waiting for the WASM.
@@ -248,7 +250,6 @@ function startOpening(opening) {
 function enablePlayerTurn(preloaded) {
   analysis = preloaded;
   $('board-depth').textContent = preloaded.depth ?? depth;
-  setEvaluation(preloaded.best);
   phase = 'ready';
   setStatus(game.isCheck() ? 'You’re in check. Find your move.' : 'Your move. Make it count.', '', 'ready');
   renderBoard();
@@ -264,7 +265,7 @@ function restart({ increment = false } = {}) {
   lastDecision = null;
   endingSaved = false;
   analysis = null;
-  setEvaluation(null);
+  setEvaluation({ type: 'cp', value: 0 });
   syncControls();
   prepareTurn(token);
 }
