@@ -30,6 +30,7 @@ let analysis = null;
 let attempt = 1;
 let safeMoves = 0;
 let toleranceStreak = 0;
+let streakEligible = true;
 let lastDecision = null;
 let endingSaved = false;
 let version = 0;
@@ -114,8 +115,8 @@ function syncControls() {
   });
   $('safe-moves').textContent = safeMoves;
   $('attempt').textContent = String(attempt).padStart(2, '0');
-  $('longest-streak').textContent = practiceHistory.getLongestStreak(tolerance);
-  $('longest-streak').title = `Longest streak at ${tolerance} cp tolerance`;
+  $('longest-streak').textContent = streakEligible ? practiceHistory.getLongestStreak(tolerance) : '—';
+  $('longest-streak').title = streakEligible ? `Longest streak at ${tolerance} cp tolerance` : 'This attempt does not count because tolerance changed mid-game';
   $('mistakes-count').textContent = practiceHistory.endings.length;
   $('sound-label').textContent = audio.muted ? 'Sound off' : 'Sound on';
   $('sound-toggle').setAttribute('aria-pressed', audio.muted);
@@ -307,6 +308,7 @@ function restart({ increment = false } = {}) {
   game = new Chess();
   safeMoves = 0;
   toleranceStreak = 0;
+  streakEligible = true;
   lastDecision = null;
   endingSaved = false;
   analysis = null;
@@ -387,7 +389,7 @@ function playMove(move) {
   safeMoves++;
   toleranceStreak++;
   lastDecision.streak = toleranceStreak;
-  practiceHistory.updateStreak(tolerance, toleranceStreak);
+  if (streakEligible) practiceHistory.updateStreak(tolerance, toleranceStreak);
   syncControls();
   audio.move();
   if (finishIfOver()) return;
@@ -507,7 +509,10 @@ $('promotion').addEventListener('keydown', event => {
 
 $('tolerance').addEventListener('input', event => {
   const nextTolerance = Number(event.target.value);
-  if (nextTolerance !== tolerance) toleranceStreak = 0;
+  if (nextTolerance !== tolerance) {
+    toleranceStreak = 0;
+    if (safeMoves > 0) streakEligible = false;
+  }
   tolerance = nextTolerance;
   syncControls();
   savePreferences();
