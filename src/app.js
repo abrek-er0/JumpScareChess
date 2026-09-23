@@ -19,8 +19,8 @@ let engine = new StockfishEngine();
 let game = new Chess();
 let sidePreference = 'random';
 let side = 'w';
-let tolerance = 80;
-let depth = 12;
+let tolerance = 50;
+let depth = 11;
 let selected = null;
 let legalTargets = [];
 let phase = 'loading';
@@ -42,6 +42,12 @@ try {
   const saved = JSON.parse(localStorage.getItem('jumpscare-preferences') || '{}');
   if (Number.isFinite(saved.tolerance)) tolerance = Math.max(10, Math.min(300, Math.round(saved.tolerance / 10) * 10));
   if (Number.isFinite(saved.depth)) depth = Math.max(6, Math.min(18, Math.round(saved.depth)));
+  // Previous builds saved the old defaults as preferences. Update those once,
+  // while retaining any values the player deliberately set elsewhere.
+  if (saved.settingsDefaultVersion !== 2) {
+    if (saved.tolerance === 80) tolerance = 50;
+    if (saved.depth === 12) depth = 11;
+  }
   if (['w', 'b', 'random'].includes(saved.side)) sidePreference = saved.side;
   // The original default was White. Migrate it once so existing local previews
   // pick up the new Random default while subsequent choices remain persistent.
@@ -53,7 +59,7 @@ window.addEventListener('pointerdown', () => audio.unlock(), { once: true });
 window.addEventListener('keydown', () => audio.unlock(), { once: true });
 
 function savePreferences() {
-  try { localStorage.setItem('jumpscare-preferences', JSON.stringify({ tolerance, depth, side: sidePreference, sideDefaultVersion: 2, muted: audio.muted })); } catch { /* Storage can be disabled. */ }
+  try { localStorage.setItem('jumpscare-preferences', JSON.stringify({ tolerance, depth, side: sidePreference, sideDefaultVersion: 2, settingsDefaultVersion: 2, muted: audio.muted })); } catch { /* Storage can be disabled. */ }
 }
 
 function setStatus(message, hint, state = 'busy') {
