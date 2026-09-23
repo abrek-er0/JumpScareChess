@@ -1,0 +1,137 @@
+.run-stats {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.stat-label {
+  min-height: 22px;
+  font-size: 7px;
+  line-height: 1.5;
+  letter-spacing: .65px;
+}
+
+.run-stats strong { margin-top: 4px; }
+
+.mistakes-button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 13px 11px;
+  margin-top: 27px;
+  border: 1px solid #dce5f0;
+  border-radius: 8px;
+  background: #eff4fb;
+  color: #4d6c93;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  transition: background .15s, border-color .15s;
+}
+
+.mistakes-button:hover { background: #e6eef9; border-color: #a8bfdf; }
+.mistakes-button > svg { width: 14px; height: 14px; flex-shrink: 0; }
+.mistakes-count { margin-left: auto; font-size: 10px; color: #879cb8; font-variant-numeric: tabular-nums; }
+
+.chessboard-icon {
+  display: block;
+  width: 29px;
+  height: 29px;
+  flex-shrink: 0;
+  border: 2px solid white;
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px #b7cbe4;
+  background: repeating-conic-gradient(#94b6df 0% 25%, white 0% 50%) 0 0 / 25% 25%;
+}
+
+.mistakes-dialog {
+  color: #252e3c;
+  width: min(900px, calc(100vw - 40px));
+  max-height: calc(100dvh - 48px);
+  padding: 28px;
+  border: 1px solid #e1e7ef;
+  border-radius: 16px;
+  background: #f7f9fc;
+  box-shadow: 0 24px 100px #1c304a40;
+  overscroll-behavior: contain;
+}
+
+.mistakes-dialog::backdrop { background: #1c2c46a3; backdrop-filter: blur(5px); }
+body:has(.mistakes-dialog[open]) { overflow: hidden; }
+.review-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
+.review-header h2 { font-size: 23px; letter-spacing: -.6px; margin: 0; font-weight: 650; }
+.review-header p { font-size: 12px; color: #8a97a9; margin: 8px 0 0; }
+.close-review { display: grid; place-items: center; width: 32px; height: 32px; padding: 6px; background: #eaf0f7; border: 0; border-radius: 50%; color: #7c8da4; }
+.close-review svg { width: 20px; height: 20px; }
+.close-review:hover { background: #dce7f5; }
+.mistakes-empty { padding: 64px 15px; text-align: center; }
+.mistakes-empty .chessboard-icon { margin: 0 auto 25px; width: 58px; height: 58px; }
+.mistakes-empty h3 { font-size: 15px; font-weight: 600; }
+.mistakes-empty p { font-size: 12px; color: #929fb0; }
+.ending-list { display: flex; gap: 10px; overflow-x: auto; padding: 4px 2px 14px; margin: 24px 0 22px; scrollbar-width: thin; scrollbar-color: #b5c8e0 transparent; }
+.ending-card { flex: 0 0 92px; padding: 7px; border: 1px solid #dfe6f0; border-radius: 7px; background: #fff; text-align: left; }
+.ending-card[aria-pressed=true] { background: #eaf1fc; border-color: #7f9fcc; box-shadow: 0 0 0 1px #7f9fcc; }
+.ending-card:hover { border-color: #9ab5db; }
+.ending-card > strong { display: block; margin-top: 8px; font-size: 9px; font-weight: 600; color: #6f83a0; }
+.ending-card-move { display: block; margin-top: 4px; font-size: 11px; }
+.ending-thumbnail { width: 100%; border: 1px solid #dee6f1; pointer-events: none; }
+.ending-thumbnail .square img { width: 95%; height: 95%; filter: none; }
+.review-detail { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 28px; }
+.review-position { min-width: 0; }
+.review-board { position: relative; touch-action: auto; }
+.review-board .square { cursor: default; }
+.review-arrows { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 5; pointer-events: none; overflow: visible; }
+.move-arrow { fill: none; stroke-width: 13; stroke-linecap: round; stroke-linejoin: round; }
+.move-arrow-playable { stroke: #21985b; opacity: .72; }
+.move-arrow-playable.focused { stroke-width: 17; opacity: 1; filter: drop-shadow(0 0 3px #ffffffb3); }
+.move-arrow-played { stroke: #e1424c; opacity: .95; }
+.arrowhead-playable { fill: #21985b; }
+.arrowhead-played { fill: #e1424c; }
+.review-arrow-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; margin-top: 13px; font-size: 10px; color: #7d8da2; }
+.review-arrow-legend > span { display: inline-flex; align-items: center; gap: 5px; }
+.legend-arrow { font-size: 20px; line-height: 1; font-weight: 700; }
+.legend-playable { color: #21985b; }
+.legend-played { color: #e1424c; }
+.review-caption { min-height: 18px; margin: 14px 0 0; font-size: 11px; color: #8796aa; }
+.review-game-info { padding-bottom: 20px; margin-bottom: 20px; border-bottom: 1px solid #e0e7f0; }
+.review-outcome { display: inline-block; padding: 5px 8px; background: #e7effa; border-radius: 5px; font-size: 10px; color: #6482ac; }
+.review-outcome[data-outcome=blunder], .review-outcome[data-outcome=loss] { background: #faeaea; color: #bb656b; }
+.review-game-info h3 { margin: 14px 0 8px; font-size: 18px; font-weight: 600; letter-spacing: -.3px; }
+.review-game-info p { font-size: 10px; color: #8a98ab; line-height: 1.7; margin: 0; }
+#alternatives-title { margin: 0; font-size: 12px; font-weight: 600; }
+.alternatives-description { margin: 8px 0 15px; color: #8e9cb0; font-size: 11px; }
+.alternative-list { display: grid; gap: 5px; }
+.alternative-move { display: flex; align-items: center; gap: 13px; padding: 9px 11px; background: #fff; border: 1px solid #e2e8f1; border-radius: 5px; text-align: left; }
+.alternative-move:hover, .alternative-move[aria-pressed=true] { background: #eaf2fd; border-color: #a6bfdf; }
+.alternative-rank { min-width: 16px; text-align: center; color: #a0aec0; font-size: 9px; font-variant-numeric: tabular-nums; }
+.alternative-move strong { font-size: 12px; font-weight: 600; }
+.alternative-loss { margin-left: auto; white-space: nowrap; font-size: 10px; color: #7894aa; font-variant-numeric: tabular-nums; }
+.alternative-reset { margin-bottom: 3px; color: #617fa4; }
+.alternative-reset-icon { color: inherit; font-size: 20px; line-height: 1; }
+.alternative-played { margin-top: 6px; background: #fff6f6; border-color: #efd0d3; color: #be3542; }
+.alternative-played .alternative-rank, .alternative-played .alternative-loss { color: inherit; }
+.alternative-played .alternative-rank { font-size: 17px; }
+.alternative-played:hover, .alternative-played[aria-pressed=true] { background: #fde9eb; border-color: #d7858e; }
+
+@media (max-width: 1050px) and (min-width: 801px) {
+  .mistakes-button { gap: 7px; padding: 12px 8px; font-size: 10px; }
+  .mistakes-button .chessboard-icon { width: 23px; height: 23px; }
+  .mistakes-button > svg { display: none; }
+  .run-stats strong { font-size: 24px; }
+}
+
+@media (max-width: 800px) {
+  .run-stats { grid-column: 1 / -1; grid-row: 3; border-top: 1px solid var(--line); padding-top: 23px; }
+  .stat-label { min-height: 15px; font-size: 8px; }
+  .mistakes-button { align-self: center; margin-top: 20px; }
+  .engine-state { grid-column: 1 / -1; margin-top: -6px; }
+}
+
+@media (max-width: 600px) {
+  .mistakes-dialog { width: calc(100vw - 24px); max-height: calc(100dvh - 24px); padding: 20px 17px; border-radius: 12px; }
+  .review-detail { grid-template-columns: 1fr; gap: 24px; }
+  .review-header h2 { font-size: 21px; }
+  .ending-list { margin-top: 20px; margin-bottom: 17px; }
+  .ending-card { flex-basis: 80px; }
+  .review-game-info { padding-bottom: 16px; margin-bottom: 16px; }
+}

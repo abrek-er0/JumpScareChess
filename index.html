@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f7f9fc" />
+    <meta name="description" content="A chess opening trainer with instant consequences. Keep your moves within tolerance or start again." />
+    <title>Jumpscare Chess</title>
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="src/styles.css" />
+    <link rel="stylesheet" href="src/review.css" />
+    <link rel="stylesheet" href="src/feedback.css" />
+    <script type="module" src="src/startup.js"></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="app-header">
+        <a class="brand" href="./" aria-label="Jumpscare Chess home">
+          <span class="brand-mark"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m13.5 2-8 12H12l-1.5 8 8-12H12l1.5-8Z" fill="currentColor"/></svg></span>
+          <span>Jumpscare<span class="brand-light"> chess</span></span>
+        </a>
+        <span class="header-note">A little pressure. A better opening.</span>
+      </header>
+
+      <main class="trainer">
+        <section class="board-panel" aria-label="Chess game">
+          <div class="board-shell">
+            <div class="player-line opponent-line">
+              <div class="player-identity"><span class="engine-avatar"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 4h8v4l-2 2v6h3v4H7v-4h3v-6L8 8V4Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 4v3M7 16h10M6 20h12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span><div><strong>Stockfish 19</strong><span class="player-description">Your opponent</span></div></div>
+              <span class="depth-badge">DEPTH <span id="board-depth">12</span></span>
+            </div>
+            <div class="board-with-evaluation">
+              <div class="board-frame">
+                <div id="board" class="board" role="group" aria-label="Chessboard, White at the bottom" aria-busy="true"></div>
+                <div id="promotion" class="promotion" role="dialog" aria-label="Choose a promotion piece" aria-modal="true" hidden>
+                  <div class="promotion-card"><span>Promote to</span><div id="promotion-options"></div><button id="cancel-promotion" class="text-button">Cancel</button></div>
+                </div>
+              </div>
+              <div id="evaluation-bar" class="evaluation-bar" data-side="w" role="img" aria-label="Waiting for engine evaluation" title="Evaluation from White’s perspective">
+                <div class="evaluation-white" aria-hidden="true"></div>
+                <span class="evaluation-midpoint" aria-hidden="true"></span>
+                <span id="evaluation-score" class="evaluation-score" data-advantage="w" aria-hidden="true">—</span>
+              </div>
+            </div>
+            <div class="player-line your-line">
+              <div class="player-identity"><span class="you-avatar"><img id="your-piece" src="assets/pieces/wP.svg" alt="" /></span><div><strong>You <span id="your-color" class="color-badge">White</span></strong><span id="turn-status" class="player-description" role="status">Loading the engine…</span></div></div>
+              <div class="move-indicator"><span id="turn-dot" class="status-dot busy"></span><span id="move-label">Getting ready</span></div>
+            </div>
+            <div class="board-caption"><span id="board-hint"></span><button id="retry" class="text-button" hidden>Try again</button></div>
+          </div>
+        </section>
+
+        <aside class="controls-panel" aria-label="Game controls">
+          <div class="control-group">
+            <label for="tolerance">Centipawn tolerance</label>
+            <div class="control-value"><output id="tolerance-output" for="tolerance">80</output><span>cp</span><span id="tolerance-description" class="value-description">Room to breathe</span></div>
+            <input id="tolerance" type="range" min="10" max="300" value="80" step="10" />
+            <div class="range-labels"><span>Strict</span><span>Forgiving</span></div>
+          </div>
+
+          <div class="control-group depth-group">
+            <label for="depth">Engine depth</label>
+            <div class="control-value"><output id="depth-output" for="depth">12</output><span>plies</span><span id="depth-description" class="value-description">Balanced</span></div>
+            <input id="depth" type="range" min="6" max="18" value="12" step="1" />
+            <div class="range-labels"><span>Faster</span><span>Deeper</span></div>
+          </div>
+
+          <fieldset class="side-control">
+            <legend>Play as</legend>
+            <div class="side-options">
+              <button class="side-option selected" data-side="w" aria-label="Play as White" aria-pressed="true"><img src="assets/pieces/wP.svg" alt="" /><span>White</span><svg class="side-check" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 8 2.5 2.5L12 5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <button class="side-option" data-side="b" aria-label="Play as Black" aria-pressed="false"><img src="assets/pieces/bP.svg" alt="" /><span>Black</span><svg class="side-check" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 8 2.5 2.5L12 5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <button class="side-option" data-side="random" aria-label="Play as a random color each game" aria-pressed="false" title="Choose White or Black randomly for each new game"><span class="random-pieces" aria-hidden="true"><img src="assets/pieces/wP.svg" alt="" /><img src="assets/pieces/bP.svg" alt="" /></span><span>Random</span><svg class="side-check" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 8 2.5 2.5L12 5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            </div>
+          </fieldset>
+
+          <div class="run-stats"><div><span class="stat-label">SAFE MOVES</span><strong id="safe-moves">0</strong></div><div><span class="stat-label">ATTEMPT</span><strong id="attempt">01</strong></div><div><span class="stat-label">LONGEST STREAK</span><strong id="longest-streak">0</strong></div></div>
+
+          <button id="my-mistakes" class="mistakes-button" aria-haspopup="dialog" aria-controls="mistakes-dialog"><span class="chessboard-icon" aria-hidden="true"></span><span>My mistakes</span><span id="mistakes-count" class="mistakes-count">0</span><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="m8 5 5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <div class="engine-state"><span id="engine-dot" class="status-dot busy"></span><span id="engine-status">Loading Stockfish 19</span></div>
+        </aside>
+      </main>
+      <footer class="app-footer"><span>Learn the opening. Feel the mistake.</span><button id="sound-toggle" class="sound-toggle" aria-label="Mute sound" aria-pressed="false"><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M9 4 5 7H2v6h3l4 3V4Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path class="sound-waves" d="M12 7a5 5 0 0 1 0 6m2.5-8.5a8 8 0 0 1 0 11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg><span id="sound-label">Sound on</span></button></footer>
+    </div>
+    <dialog id="mistakes-dialog" class="mistakes-dialog" aria-labelledby="mistakes-title">
+      <header class="review-header"><div><h2 id="mistakes-title">My mistakes</h2><p>Your last 10 game endings</p></div><button id="close-mistakes" class="close-review" aria-label="Close my mistakes"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button></header>
+      <div id="mistakes-empty" class="mistakes-empty"><span class="chessboard-icon" aria-hidden="true"></span><h3>No games to review yet</h3><p>Your finished games will appear here.</p></div>
+      <div id="mistakes-content" hidden>
+        <div id="ending-list" class="ending-list" role="group" aria-label="Recent game endings"></div>
+        <div class="review-detail">
+          <section class="review-position" aria-label="Selected game position">
+            <div class="board-frame"><div id="review-board" class="board review-board" role="img"></div></div>
+            <div class="review-arrow-legend"><span id="playable-arrow-legend"><span class="legend-arrow legend-playable" aria-hidden="true">↗</span> Playable moves</span><span><span class="legend-arrow legend-played" aria-hidden="true">↗</span> Your move</span></div>
+            <p id="review-caption" class="review-caption" role="status"></p>
+          </section>
+          <section class="review-moves" aria-labelledby="alternatives-title">
+            <div class="review-game-info"><span id="review-outcome" class="review-outcome"></span><h3 id="review-played"></h3><p id="review-settings"></p></div>
+            <h3 id="alternatives-title">Moves within tolerance</h3><p id="alternatives-description" class="alternatives-description"></p>
+            <div id="alternative-list" class="alternative-list"></div>
+          </section>
+        </div>
+      </div>
+    </dialog>
+    <div id="scare" class="scare" role="alert" hidden>
+      <div class="lightning-flash"></div>
+      <svg class="lightning" viewBox="0 0 1000 800" preserveAspectRatio="none" aria-hidden="true"><g><path d="M140 0 220 130 173 176 323 295 256 306 396 451 330 457 450 590"/><path d="m870 0-88 125 41 55-143 128 65 8-115 143 66 1-147 173"/><path d="m0 620 180-66-20-58 174-43M1000 625l-185-61 17-62-136-42"/></g></svg>
+      <div class="scare-content"><div class="red-cross" aria-hidden="true"><span></span><span></span></div><h1>THAT’S A BLUNDER.</h1><p id="scare-detail"></p><span class="restart-label">Take a breath. Go again.</span></div>
+    </div>
+    <div id="move-feedback-status" class="visually-hidden" role="status" aria-live="polite" aria-atomic="true"></div>
+    <noscript>This chess trainer needs JavaScript enabled.</noscript>
+  </body>
+</html>
