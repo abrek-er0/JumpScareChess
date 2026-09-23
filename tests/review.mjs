@@ -135,4 +135,30 @@ test('A played move also in the alternatives selects only its clicked row', () =
   assertSelected(rows().at(-1));
 });
 
+test('Straight and knight shafts stop behind their heads in both board orientations', () => {
+  for (const side of ['w', 'b']) {
+    const sample = fixture(side);
+    sample.alternatives.push({ uci: side === 'w' ? 'g1f3' : 'g8f6', san: side === 'w' ? 'Nf3' : 'Nf6', loss: 0 });
+    review.select(sample);
+    const layer = $('review-board').children.at(-1);
+    const marker = layer.children[0].children[0];
+    const headLength = 32 - Number(marker.getAttribute('refX'));
+    assert(headLength > 17 / 2, 'Focused shaft cap can extend past the arrowhead');
+    const moves = [...sample.alternatives, sample.played];
+    arrows().forEach((arrow, index) => {
+      const values = arrow.getAttribute('d').match(/-?\d+(?:\.\d+)?/g).map(Number);
+      const [previousX, previousY, endX, endY] = values.slice(-4);
+      const length = Math.hypot(endX - previousX, endY - previousY);
+      const tipX = endX + (endX - previousX) / length * headLength;
+      const tipY = endY + (endY - previousY) / length * headLength;
+      const square = moves[index].uci.slice(2, 4);
+      const file = square.charCodeAt(0) - 97;
+      const rank = Number(square[1]) - 1;
+      const expectedX = (side === 'w' ? file : 7 - file) * 100 + 50;
+      const expectedY = (side === 'w' ? 7 - rank : rank) * 100 + 50;
+      assert(Math.abs(tipX - expectedX) < .001 && Math.abs(tipY - expectedY) < .001, 'Arrow tip moved away from its destination square');
+    });
+  }
+});
+
 output(`${count} review interaction tests passed.`);

@@ -25,21 +25,24 @@ function arrowPath(uci, side) {
   const [x2, y2] = squareCenter(uci.slice(2, 4), side);
   const dx = x2 - x1;
   const dy = y2 - y1;
+  // The marker joins the shaft at x=9 and ends at x=32. Stop the shaft
+  // 23 units early so its rounded cap stays inside the head, not past its tip.
+  const headLength = 32 - 9;
   // Knight moves take a right-angle route so their destinations are easy to read.
   if (Math.abs(dx * dy) === 20000 && Math.abs(dx) + Math.abs(dy) === 300) {
     return Math.abs(dx) > Math.abs(dy)
-      ? `M ${x1 + Math.sign(dx) * 24} ${y1} L ${x2} ${y1} L ${x2} ${y2}`
-      : `M ${x1} ${y1 + Math.sign(dy) * 24} L ${x1} ${y2} L ${x2} ${y2}`;
+      ? `M ${x1 + Math.sign(dx) * 24} ${y1} L ${x2} ${y1} L ${x2} ${y2 - Math.sign(dy) * headLength}`
+      : `M ${x1} ${y1 + Math.sign(dy) * 24} L ${x1} ${y2} L ${x2 - Math.sign(dx) * headLength} ${y2}`;
   }
   const length = Math.hypot(dx, dy);
-  return `M ${x1 + dx / length * 24} ${y1 + dy / length * 24} L ${x2} ${y2}`;
+  return `M ${x1 + dx / length * 24} ${y1 + dy / length * 24} L ${x2 - dx / length * headLength} ${y2 - dy / length * headLength}`;
 }
 
 function drawMoveArrows(element, ending, mode, selectedMove) {
   const layer = svgElement('svg', { class: 'review-arrows', viewBox: '0 0 800 800', 'aria-hidden': 'true' });
   const definitions = svgElement('defs');
   for (const kind of ['playable', 'played']) {
-    const marker = svgElement('marker', { id: `review-arrow-${kind}`, markerWidth: 36, markerHeight: 36, refX: 31, refY: 18, orient: 'auto', markerUnits: 'userSpaceOnUse', viewBox: '0 0 36 36' });
+    const marker = svgElement('marker', { id: `review-arrow-${kind}`, markerWidth: 36, markerHeight: 36, refX: 9, refY: 18, orient: 'auto', markerUnits: 'userSpaceOnUse', viewBox: '0 0 36 36' });
     marker.append(svgElement('path', { d: 'M 2 2 L 32 18 L 2 34 L 9 18 Z', class: `arrowhead-${kind}` }));
     definitions.append(marker);
   }

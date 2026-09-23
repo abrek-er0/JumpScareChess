@@ -85,8 +85,8 @@ body:has(.mistakes-dialog[open]) { overflow: hidden; }
 .move-arrow-playable { stroke: #21985b; opacity: .72; }
 .move-arrow-playable.focused { stroke-width: 17; opacity: 1; filter: drop-shadow(0 0 3px #ffffffb3); }
 .move-arrow-played { stroke: #e1424c; opacity: .95; }
-.arrowhead-playable { fill: #21985b; }
-.arrowhead-played { fill: #e1424c; }
+.arrowhead-playable { fill: #21985b; stroke: none; }
+.arrowhead-played { fill: #e1424c; stroke: none; }
 .review-arrow-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; margin-top: 13px; font-size: 10px; color: #7d8da2; }
 .review-arrow-legend > span { display: inline-flex; align-items: center; gap: 5px; }
 .legend-arrow { font-size: 20px; line-height: 1; font-weight: 700; }
