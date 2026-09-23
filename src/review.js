@@ -8,6 +8,25 @@ const outcomes = { blunder: 'Over tolerance', win: 'Checkmate · You won', loss:
 const svgNamespace = 'http://www.w3.org/2000/svg';
 const reviewLoss = loss => loss >= 90000 ? '−M' : formatCentipawnChange(-loss);
 
+function copyWithSelection(fen) {
+  const input = document.createElement('textarea');
+  input.value = fen;
+  input.readOnly = true;
+  input.setAttribute('aria-hidden', 'true');
+  input.style.position = 'fixed';
+  input.style.left = '-9999px';
+  // Keep the temporary field inside the modal so Safari can focus it.
+  $('mistakes-dialog').append(input);
+  try {
+    input.focus();
+    input.select();
+    return document.execCommand?.('copy') === true;
+  } finally {
+    input.remove();
+    $('copy-fen').focus();
+  }
+}
+
 function svgElement(tag, attributes = {}) {
   const element = document.createElementNS(svgNamespace, tag);
   for (const [name, value] of Object.entries(attributes)) element.setAttribute(name, value);
@@ -107,13 +126,34 @@ export class MistakesReview {
   constructor(history) {
     this.history = history;
     this.selected = null;
+    this.currentFen = null;
     $('my-mistakes').addEventListener('click', () => this.open());
+    $('copy-fen').addEventListener('click', () => this.copyFen());
     $('close-mistakes').addEventListener('click', () => $('mistakes-dialog').close());
     $('mistakes-dialog').addEventListener('click', event => {
       if (event.target !== $('mistakes-dialog')) return;
       const rect = $('mistakes-dialog').getBoundingClientRect();
       if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) $('mistakes-dialog').close();
     });
+  }
+
+  async copyFen() {
+    if (!this.currentFen) return;
+    const fen = this.currentFen;
+    try {
+      if (globalThis.navigator?.clipboard?.writeText) await globalThis.navigator.clipboard.writeText(fen);
+      else if (!copyWithSelection(fen)) throw new Error('Clipboard unavailable');
+      if (this.currentFen === fen) $('copy-fen-label').textContent = 'Copied!';
+    } catch {
+      try {
+        if (copyWithSelection(fen)) {
+          if (this.currentFen === fen) $('copy-fen-label').textContent = 'Copied!';
+          return;
+        }
+      } catch { /* Manual copy is still possible when browser permissions block both APIs. */ }
+      globalThis.window?.prompt?.('Copy FEN:', fen);
+      if (this.currentFen === fen) $('copy-fen-label').textContent = 'Copy FEN';
+    }
   }
 
   open() {
@@ -201,6 +241,8 @@ export class MistakesReview {
     if (!ending) return;
     const previewMove = mode === 'played' ? ending.played : move;
     const fen = mode === 'before' ? ending.beforeFen : previewAlternative(ending, previewMove.uci);
+    this.currentFen = fen;
+    $('copy-fen-label').textContent = 'Copy FEN';
     const highlight = mode === 'before' ? null : fromUci(previewMove.uci);
     drawPosition($('review-board'), fen, ending.side, highlight);
     drawMoveArrows($('review-board'), ending, mode, move);

@@ -18,6 +18,11 @@
 .app-logo img { display: block; width: 100%; height: auto; }
 .turn-controls { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
 .turn-controls .sound-toggle { padding: 3px 0; }
+.pressure-toggle { display: grid; place-items: center; width: 22px; height: 22px; padding: 2px; border: 1px solid #adc2db; border-radius: 5px; background: #eaf2fd; color: #5680b6; }
+.pressure-toggle[aria-pressed=false] { border-color: #e0e5ec; background: #f3f5f8; color: #a9b2be; }
+.pressure-toggle svg { width: 16px; height: 16px; }
+.pressure-time { min-width: 25px; color: #be4a55; font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
+.pressure-time.urgent { color: #e12539; animation: breathe .55s ease-in-out infinite; }
 .board-caption:has(#board-hint:empty):has(#retry[hidden]) { display: none; }
 @media (max-width: 600px) {
   .opponent-line { flex-wrap: wrap; gap: 12px; }

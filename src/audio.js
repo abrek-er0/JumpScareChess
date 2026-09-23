@@ -1,11 +1,23 @@
 export class GameAudio {
-  constructor() { this.context = null; this.muted = false; this.warmed = false; }
+  constructor() {
+    this.context = null;
+    this.muted = false;
+    this.warmed = false;
+    this.pressureBuffer = null;
+    this.pressureLoading = null;
+    this.pressureActive = false;
+    this.pressureSource = null;
+    this.pressureGain = null;
+  }
 
   prepare() {
     if (this.muted || this.context) return;
     try {
       const Audio = window.AudioContext || window.webkitAudioContext;
-      if (Audio) this.context = new Audio();
+      if (Audio) {
+        this.context = new Audio();
+        this.loadPressure();
+      }
     } catch { /* The visual feedback still works when audio is unavailable. */ }
   }
 
@@ -29,9 +41,49 @@ export class GameAudio {
     if (this.muted) return;
     try {
       this.prepare();
-      if (this.context?.state === 'suspended') this.context.resume().then(() => this.warm()).catch(() => {});
-      else this.warm();
+      if (this.context?.state === 'suspended') this.context.resume().then(() => { this.warm(); this.playPressure(); }).catch(() => {});
+      else { this.warm(); this.playPressure(); }
     } catch { /* The visual feedback still works when audio is unavailable. */ }
+  }
+
+  loadPressure() {
+    if (this.pressureLoading || typeof fetch !== 'function') return;
+    this.pressureLoading = fetch('assets/pressure-clock.mp3')
+      .then(response => {
+        if (!response.ok) throw new Error('Pressure clock sound unavailable');
+        return response.arrayBuffer();
+      })
+      .then(bytes => this.context.decodeAudioData(bytes))
+      .then(buffer => { this.pressureBuffer = buffer; this.playPressure(); })
+      .catch(() => { /* Keep the game playable if the optional sound cannot load. */ });
+  }
+
+  startPressure() {
+    if (this.muted) return;
+    this.pressureActive = true;
+    this.playPressure();
+  }
+
+  playPressure() {
+    if (!this.pressureActive || this.muted || this.pressureSource || !this.pressureBuffer || this.context?.state !== 'running') return;
+    const source = this.context.createBufferSource();
+    const gain = this.context.createGain();
+    source.buffer = this.pressureBuffer;
+    source.loop = true;
+    gain.gain.value = 0.14;
+    source.connect(gain).connect(this.context.destination);
+    source.start();
+    this.pressureSource = source;
+    this.pressureGain = gain;
+  }
+
+  pausePressure() {
+    this.pressureActive = false;
+    this.pressureSource?.stop();
+    this.pressureSource?.disconnect();
+    this.pressureGain?.disconnect();
+    this.pressureSource = null;
+    this.pressureGain = null;
   }
 
   move() {

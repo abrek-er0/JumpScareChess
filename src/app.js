@@ -6,6 +6,7 @@ import { MistakesReview } from './review.js';
 import { choosePlayerSide, prepareComputerTurn } from './turns.js';
 import { describeMove, evaluationDisplay, scoreAfterMove, FloatingMoveFeedback } from './feedback.js';
 import { OpeningBook } from './openings.js';
+import { TurnClock } from './pressure.js';
 
 const $ = id => document.getElementById(id);
 const names = { p: 'pawn', n: 'knight', b: 'bishop', r: 'rook', q: 'queen', k: 'king' };
@@ -21,6 +22,7 @@ let sidePreference = 'random';
 let side = 'w';
 let tolerance = 50;
 let depth = 11;
+let pressureMode = true;
 let selected = null;
 let legalTargets = [];
 let phase = 'loading';
@@ -37,11 +39,20 @@ let promotionMoves = null;
 let drag = null;
 let suppressClick = false;
 const cache = new Map();
+const pressureClock = new TurnClock({
+  onTick: seconds => {
+    $('pressure-time').textContent = `${seconds}s`;
+    $('pressure-time').classList.toggle('urgent', seconds <= 3);
+  },
+  onExpire: () => pressureTimeout(),
+  onRunChange: running => running ? audio.startPressure() : audio.pausePressure(),
+});
 
 try {
   const saved = JSON.parse(localStorage.getItem('jumpscare-preferences') || '{}');
   if (Number.isFinite(saved.tolerance)) tolerance = Math.max(10, Math.min(300, Math.round(saved.tolerance / 10) * 10));
   if (Number.isFinite(saved.depth)) depth = Math.max(6, Math.min(18, Math.round(saved.depth)));
+  pressureMode = saved.pressure !== false;
   // Previous builds saved the old defaults as preferences. Update those once,
   // while retaining any values the player deliberately set elsewhere.
   if (saved.settingsDefaultVersion !== 2) {
@@ -59,7 +70,7 @@ window.addEventListener('pointerdown', () => audio.unlock(), { once: true });
 window.addEventListener('keydown', () => audio.unlock(), { once: true });
 
 function savePreferences() {
-  try { localStorage.setItem('jumpscare-preferences', JSON.stringify({ tolerance, depth, side: sidePreference, sideDefaultVersion: 2, settingsDefaultVersion: 2, muted: audio.muted })); } catch { /* Storage can be disabled. */ }
+  try { localStorage.setItem('jumpscare-preferences', JSON.stringify({ tolerance, depth, side: sidePreference, sideDefaultVersion: 2, settingsDefaultVersion: 2, pressure: pressureMode, muted: audio.muted })); } catch { /* Storage can be disabled. */ }
 }
 
 function setStatus(message, hint, state = 'busy') {
@@ -98,6 +109,9 @@ function syncControls() {
   $('sound-label').textContent = audio.muted ? 'Sound off' : 'Sound on';
   $('sound-toggle').setAttribute('aria-pressed', audio.muted);
   $('sound-toggle').setAttribute('aria-label', audio.muted ? 'Unmute sound' : 'Mute sound');
+  $('pressure-toggle').setAttribute('aria-pressed', pressureMode);
+  $('pressure-toggle').setAttribute('aria-label', pressureMode ? 'Turn off pressure mode' : 'Turn on pressure mode');
+  $('pressure-toggle').title = pressureMode ? 'Pressure mode on: 10 seconds per move after your first move' : 'Pressure mode off';
 }
 
 function setEvaluation(score, perspective = game.turn()) {
@@ -154,6 +168,8 @@ function renderBoard() {
 }
 
 function cancelWork() {
+  pressureClock.stop();
+  $('pressure-time').hidden = true;
   version++;
   controller.abort();
   controller = new AbortController();
@@ -195,6 +211,8 @@ async function getAnalysis(position, token) {
 
 function showError(error, token) {
   if (token !== version || error.name === 'AbortError') return;
+  pressureClock.stop();
+  $('pressure-time').hidden = true;
   phase = 'error';
   setStatus('Could not prepare this position', error.message, 'error');
   renderBoard();
@@ -262,6 +280,14 @@ function enablePlayerTurn(preloaded) {
   phase = 'ready';
   setStatus(game.isCheck() ? 'You’re in check. Find your move.' : 'Your move. Make it count.', '', 'ready');
   renderBoard();
+  if (pressureMode && safeMoves > 0) {
+    $('pressure-time').hidden = false;
+    pressureClock.start();
+    if ($('mistakes-dialog').open) pressureClock.pause();
+  } else {
+    pressureClock.stop();
+    $('pressure-time').hidden = true;
+  }
 }
 
 function restart({ increment = false } = {}) {
@@ -281,6 +307,8 @@ function restart({ increment = false } = {}) {
 
 function finishIfOver() {
   if (!game.isGameOver()) return false;
+  pressureClock.stop();
+  $('pressure-time').hidden = true;
   setEvaluation(game.isCheckmate() ? { type: 'mate', value: 0 } : { type: 'cp', value: 0 });
   saveEnding(game.isCheckmate() ? (game.turn() === side ? 'loss' : 'win') : 'draw');
   phase = 'finished';
@@ -305,10 +333,25 @@ function saveEnding(outcome) {
 }
 
 function blunder(loss, chosen) {
+  pressureClock.stop();
+  $('pressure-time').hidden = true;
   phase = 'scare';
   saveEnding('blunder');
+  $('scare-title').textContent = 'THAT’S A BLUNDER.';
   const forcedMateLost = analysis.best.type === 'mate' && analysis.best.value > 0 && !(chosen.type === 'mate' && chosen.value > 0);
   $('scare-detail').textContent = chosen.type === 'mate' && chosen.value < 0 ? 'You allowed a forced checkmate.' : forcedMateLost ? 'You let a forced checkmate slip away.' : `${Math.round(loss)} cp lost · Your tolerance is ${tolerance} cp`;
+  $('scare').hidden = false;
+  audio.buzz();
+  renderBoard();
+  restartTimer = setTimeout(() => restart({ increment: true }), 1900);
+}
+
+function pressureTimeout() {
+  if (phase !== 'ready' || !pressureMode) return;
+  phase = 'scare';
+  $('pressure-time').hidden = true;
+  $('scare-title').textContent = 'TIME’S UP.';
+  $('scare-detail').textContent = 'Your 10 seconds ran out.';
   $('scare').hidden = false;
   audio.buzz();
   renderBoard();
@@ -319,6 +362,8 @@ function playMove(move) {
   if (phase !== 'ready' || !analysis) return;
   const chosen = analysis.scores.get(toUci(move));
   if (!chosen) return;
+  pressureClock.stop();
+  $('pressure-time').hidden = true;
   const loss = moveLoss(analysis.best, chosen);
   const feedback = describeMove(loss, tolerance, chosen, analysis.best);
   const token = version;
@@ -477,7 +522,33 @@ document.querySelectorAll('.side-option[data-side]').forEach(button => button.ad
   savePreferences();
   restart({ increment: game.history().length > 0 });
 }));
-$('sound-toggle').addEventListener('click', () => { audio.muted = !audio.muted; audio.unlock(); syncControls(); savePreferences(); });
+$('sound-toggle').addEventListener('click', () => {
+  audio.muted = !audio.muted;
+  if (audio.muted) audio.pausePressure();
+  else {
+    audio.unlock();
+    if (pressureClock.timer !== null) audio.startPressure();
+  }
+  syncControls();
+  savePreferences();
+});
+$('pressure-toggle').addEventListener('click', () => {
+  pressureMode = !pressureMode;
+  syncControls();
+  savePreferences();
+  if (pressureMode && phase === 'ready' && safeMoves > 0) {
+    $('pressure-time').hidden = false;
+    pressureClock.start();
+    if ($('mistakes-dialog').open) pressureClock.pause();
+  } else {
+    pressureClock.stop();
+    $('pressure-time').hidden = true;
+  }
+});
+$('my-mistakes').addEventListener('click', () => pressureClock.pause());
+$('mistakes-dialog').addEventListener('close', () => {
+  if (pressureMode && phase === 'ready' && safeMoves > 0) pressureClock.resume();
+});
 $('retry').addEventListener('click', () => { cancelWork(); engine.destroy(); engine = new StockfishEngine(); prepareTurn(version); });
 window.addEventListener('pagehide', () => engine.destroy(), { once: true });
 

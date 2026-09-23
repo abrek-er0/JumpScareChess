@@ -92,7 +92,11 @@ body:has(.mistakes-dialog[open]) { overflow: hidden; }
 .legend-arrow { font-size: 20px; line-height: 1; font-weight: 700; }
 .legend-playable { color: #21985b; }
 .legend-played { color: #e1424c; }
-.review-caption { min-height: 18px; margin: 14px 0 0; font-size: 11px; color: #8796aa; }
+.review-position-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 13px; }
+.review-caption { min-height: 18px; margin: 0; font-size: 11px; color: #8796aa; }
+.copy-fen { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; padding: 5px 7px; border: 1px solid #dce5f0; border-radius: 5px; background: #fff; color: #5c789e; font-size: 10px; font-weight: 600; }
+.copy-fen:hover { background: #eaf2fd; border-color: #a6bfdf; }
+.copy-fen svg { width: 14px; height: 14px; }
 .review-game-info { padding-bottom: 20px; margin-bottom: 20px; border-bottom: 1px solid #e0e7f0; }
 .review-outcome { display: inline-block; padding: 5px 8px; background: #e7effa; border-radius: 5px; font-size: 10px; color: #6482ac; }
 .review-outcome[data-outcome=blunder], .review-outcome[data-outcome=loss] { background: #faeaea; color: #bb656b; }

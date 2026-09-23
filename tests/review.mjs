@@ -16,6 +16,7 @@ class Element {
     this.dataset = {};
     this.listeners = new Map();
     this.className = '';
+    this.style = {};
     this.classList = { add: name => { this.className += ` ${name}`; } };
   }
   append(...nodes) { this.children.push(...nodes.flatMap(node => node.tagName === '#fragment' ? node.children : [node])); }
@@ -23,12 +24,15 @@ class Element {
   setAttribute(name, value) { this.attributes.set(name, String(value)); }
   getAttribute(name) { return this.attributes.get(name) ?? null; }
   addEventListener(name, handler) { this.listeners.set(name, handler); }
-  click() { this.listeners.get('click')?.({ target: this }); }
+  click() { return this.listeners.get('click')?.({ target: this }); }
+  focus() {}
+  select() {}
+  remove() {}
   showModal() { this.open = true; }
   close() { this.open = false; }
 }
 
-const ids = ['my-mistakes', 'close-mistakes', 'mistakes-dialog', 'mistakes-empty', 'mistakes-content', 'ending-list', 'review-outcome', 'review-played', 'review-settings', 'alternatives-title', 'alternatives-description', 'alternative-list', 'review-board', 'playable-arrow-legend', 'review-caption'];
+const ids = ['my-mistakes', 'close-mistakes', 'mistakes-dialog', 'mistakes-empty', 'mistakes-content', 'ending-list', 'review-outcome', 'review-played', 'review-settings', 'alternatives-title', 'alternatives-description', 'alternative-list', 'review-board', 'playable-arrow-legend', 'review-caption', 'copy-fen', 'copy-fen-label'];
 const elements = new Map(ids.map(id => [id, new Element('div')]));
 const $ = id => elements.get(id);
 globalThis.document = {
@@ -36,6 +40,7 @@ globalThis.document = {
   createElement: tag => new Element(tag),
   createElementNS: (_, tag) => new Element(tag),
   createDocumentFragment: () => new Element('#fragment'),
+  execCommand: () => true,
 };
 
 function fixture(side = 'w') {
@@ -160,5 +165,28 @@ test('Straight and knight shafts stop behind their heads in both board orientati
     });
   }
 });
+
+let copiedFen = null;
+globalThis.navigator = { clipboard: { writeText: async value => { copiedFen = value; } } };
+review.select(ending);
+await $('copy-fen').click();
+assert(copiedFen === ending.beforeFen && $('copy-fen-label').textContent === 'Copied!', 'Reset position FEN was not copied');
+rows()[1].click();
+assert($('copy-fen-label').textContent === 'Copy FEN', 'Copy state did not reset for a new position');
+await $('copy-fen').click();
+const alternative = new Chess(ending.beforeFen); alternative.move('e4');
+assert(copiedFen === alternative.fen(), 'Suggested move FEN was not copied');
+rows().at(-1).click();
+await $('copy-fen').click();
+assert(copiedFen === ending.finalFen, 'Played move FEN was not copied');
+count++; output('PASS Copy FEN follows the displayed review position');
+
+let legacyCopied = false;
+globalThis.navigator.clipboard = undefined;
+document.execCommand = command => { legacyCopied = command === 'copy'; return true; };
+rows()[0].click();
+await $('copy-fen').click();
+assert(legacyCopied && $('copy-fen-label').textContent === 'Copied!', 'Legacy clipboard fallback did not copy the displayed FEN');
+count++; output('PASS Copy FEN falls back when the modern clipboard API is unavailable');
 
 output(`${count} review interaction tests passed.`);

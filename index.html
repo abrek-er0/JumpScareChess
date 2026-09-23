@@ -36,7 +36,7 @@
             <div class="player-line your-line">
               <div class="player-identity"><span class="you-avatar"><img id="your-piece" src="assets/pieces/wP.svg" alt="" /></span><div><strong>You <span id="your-color" class="color-badge">White</span></strong><span id="turn-status" class="player-description" role="status">Loading the engine…</span></div></div>
               <div class="turn-controls">
-                <div class="move-indicator"><span id="turn-dot" class="status-dot busy"></span><span id="move-label">Getting ready</span></div>
+                <div class="move-indicator"><span id="pressure-time" class="pressure-time" role="timer" aria-label="Seconds remaining" hidden>10s</span><button id="pressure-toggle" class="pressure-toggle" type="button" aria-label="Turn off pressure mode" aria-pressed="true" title="Pressure mode: 10 seconds per move after your first move"><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M10 5.5V10l3 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button><span id="turn-dot" class="status-dot busy"></span><span id="move-label">Getting ready</span></div>
                 <button id="sound-toggle" class="sound-toggle" aria-label="Mute sound" aria-pressed="false"><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M9 4 5 7H2v6h3l4 3V4Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path class="sound-waves" d="M12 7a5 5 0 0 1 0 6m2.5-8.5a8 8 0 0 1 0 11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg><span id="sound-label">Sound on</span></button>
               </div>
             </div>
@@ -85,7 +85,10 @@
           <section class="review-position" aria-label="Selected game position">
             <div class="board-frame"><div id="review-board" class="board review-board" role="img"></div></div>
             <div class="review-arrow-legend"><span id="playable-arrow-legend"><span class="legend-arrow legend-playable" aria-hidden="true">↗</span> Playable moves</span><span><span class="legend-arrow legend-played" aria-hidden="true">↗</span> Your move</span></div>
-            <p id="review-caption" class="review-caption" role="status"></p>
+            <div class="review-position-footer">
+              <p id="review-caption" class="review-caption" role="status"></p>
+              <button id="copy-fen" class="copy-fen" type="button" aria-label="Copy current position FEN"><span id="copy-fen-label">Copy FEN</span><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="7" y="6" width="9" height="11" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M13 6V4.5A1.5 1.5 0 0 0 11.5 3h-7A1.5 1.5 0 0 0 3 4.5v9A1.5 1.5 0 0 0 4.5 15H7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+            </div>
           </section>
           <section class="review-moves" aria-labelledby="alternatives-title">
             <div class="review-game-info"><span id="review-outcome" class="review-outcome"></span><h3 id="review-played"></h3><p id="review-settings"></p></div>
@@ -98,7 +101,7 @@
     <div id="scare" class="scare" role="alert" hidden>
       <div class="lightning-flash"></div>
       <svg class="lightning" viewBox="0 0 1000 800" preserveAspectRatio="none" aria-hidden="true"><g><path d="M140 0 220 130 173 176 323 295 256 306 396 451 330 457 450 590"/><path d="m870 0-88 125 41 55-143 128 65 8-115 143 66 1-147 173"/><path d="m0 620 180-66-20-58 174-43M1000 625l-185-61 17-62-136-42"/></g></svg>
-      <div class="scare-content"><div class="red-cross" aria-hidden="true"><span></span><span></span></div><h1>THAT’S A BLUNDER.</h1><p id="scare-detail"></p></div>
+      <div class="scare-content"><div class="red-cross" aria-hidden="true"><span></span><span></span></div><h1 id="scare-title">THAT’S A BLUNDER.</h1><p id="scare-detail"></p></div>
     </div>
     <div id="move-feedback-status" class="visually-hidden" role="status" aria-live="polite" aria-atomic="true"></div>
     <noscript>This chess trainer needs JavaScript enabled.</noscript>
