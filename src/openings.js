@@ -1,5 +1,5 @@
 import { Chess, DEFAULT_POSITION } from '../vendor/chess.js';
-import { chooseBestMove, COMPUTER_MOVE_RANGE_CP, fromUci, prepareAnalysis, toUci } from './engine.js';
+import { computerMoveCandidates, COMPUTER_MOVE_RANGE_CP, fromUci, prepareAnalysis, toUci } from './engine.js';
 
 export const OPENING_DEPTH = 18;
 export const OPENING_BUILD = '19.0.0-full';
@@ -10,6 +10,7 @@ export class OpeningBook {
   constructor() {
     this.positions = new Map();
     this.loading = null;
+    this.whiteOpeningBag = [];
   }
 
   async load(fetcher = globalThis.fetch) {
@@ -53,6 +54,7 @@ export class OpeningBook {
     }
     // Replace atomically: a partial or corrupted file cannot enable the board.
     this.positions = positions;
+    this.whiteOpeningBag = [];
   }
 
   get(position) {
@@ -66,7 +68,16 @@ export class OpeningBook {
     if (!root) return null;
     const position = new Chess();
     if (side === 'w') return { position, analysis: root };
-    const move = chooseBestMove(root, random, COMPUTER_MOVE_RANGE_CP);
+    // Shuffle a complete set of strong openings so every option appears once
+    // before any repeats. This keeps repeated practice games varied.
+    if (!this.whiteOpeningBag.length) {
+      this.whiteOpeningBag = computerMoveCandidates(root, COMPUTER_MOVE_RANGE_CP);
+      for (let i = this.whiteOpeningBag.length - 1; i > 0; i--) {
+        const j = Math.min(i, Math.floor(random() * (i + 1)));
+        [this.whiteOpeningBag[i], this.whiteOpeningBag[j]] = [this.whiteOpeningBag[j], this.whiteOpeningBag[i]];
+      }
+    }
+    const move = this.whiteOpeningBag.pop();
     position.move(fromUci(move));
     return { position, move, analysis: this.positions.get(move) };
   }

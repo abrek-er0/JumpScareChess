@@ -25,14 +25,18 @@ export function moveLoss(best, chosen) {
 
 export const COMPUTER_MOVE_RANGE_CP = 10;
 
-export function chooseBestMove(analysis, random = Math.random, rangeCp = 0) {
+export function computerMoveCandidates(analysis, rangeCp = 0) {
   const bestScore = scoreValue(analysis.best);
-  const tiedMoves = [...analysis.scores.entries()]
+  return [...analysis.scores.entries()]
     .filter(([, score]) => {
       if (analysis.best.type === 'mate' || score.type === 'mate') return scoreValue(score) === bestScore;
       return bestScore - scoreValue(score) <= rangeCp;
     })
     .map(([move]) => move);
+}
+
+export function chooseBestMove(analysis, random = Math.random, rangeCp = 0) {
+  const tiedMoves = computerMoveCandidates(analysis, rangeCp);
   if (!tiedMoves.length) throw new Error('Stockfish did not return a best move.');
   return tiedMoves[Math.floor(random() * tiedMoves.length)];
 }

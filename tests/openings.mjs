@@ -46,6 +46,14 @@ test('White and Black can restart repeatedly using the same ready opening scores
   assert(openings.positions.size === 21, 'Restarts modified the opening bank');
 });
 
+test('Computer cycles through every strong White opening before repeating one', () => {
+  const openings = book();
+  for (let cycle = 0; cycle < 3; cycle++) {
+    const moves = Array.from({ length: 4 }, () => openings.start('b', () => .2).move);
+    assert(new Set(moves).size === 4, 'A strong opening repeated before all four were played');
+  }
+});
+
 test('Reading every White move never adds or replaces precomputed Black data', () => {
   const openings = book();
   const entries = new Map(openings.positions);
