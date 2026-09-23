@@ -48,6 +48,9 @@ try {
   if (saved.side === 'w' && saved.sideDefaultVersion !== 2) sidePreference = 'random';
   audio.muted = saved.muted === true;
 } catch { /* Preferences are optional, including in private browsing. */ }
+audio.prepare();
+window.addEventListener('pointerdown', () => audio.unlock(), { once: true });
+window.addEventListener('keydown', () => audio.unlock(), { once: true });
 
 function savePreferences() {
   try { localStorage.setItem('jumpscare-preferences', JSON.stringify({ tolerance, depth, side: sidePreference, sideDefaultVersion: 2, muted: audio.muted })); } catch { /* Storage can be disabled. */ }

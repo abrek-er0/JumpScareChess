@@ -3,6 +3,6 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node tests/core.mjs && node tests/preload.mjs && node tests/openings.mjs && node tests/review.mjs && node tests/platform.mjs && node tests/browser/runtime.mjs && node tests/browser/service-worker.mjs"
+    "test": "node tests/core.mjs && node tests/audio.mjs && node tests/preload.mjs && node tests/openings.mjs && node tests/review.mjs && node tests/platform.mjs && node tests/browser/runtime.mjs && node tests/browser/service-worker.mjs"
   }
 }

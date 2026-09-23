@@ -1,13 +1,36 @@
 export class GameAudio {
-  constructor() { this.context = null; this.muted = false; }
+  constructor() { this.context = null; this.muted = false; this.warmed = false; }
+
+  prepare() {
+    if (this.muted || this.context) return;
+    try {
+      const Audio = window.AudioContext || window.webkitAudioContext;
+      if (Audio) this.context = new Audio();
+    } catch { /* The visual feedback still works when audio is unavailable. */ }
+  }
+
+  warm() {
+    if (this.warmed || !this.context || this.context.state !== 'running') return;
+    try {
+      // Browsers require a user gesture before audio can run. A silent source
+      // starts the output path before the first move can trigger the buzzer.
+      const oscillator = this.context.createOscillator();
+      const gain = this.context.createGain();
+      gain.gain.value = 0;
+      oscillator.connect(gain).connect(this.context.destination);
+      oscillator.onended = () => { oscillator.disconnect(); gain.disconnect(); };
+      oscillator.start();
+      oscillator.stop(this.context.currentTime + 0.02);
+      this.warmed = true;
+    } catch { /* Audio may be blocked by the browser. */ }
+  }
 
   unlock() {
     if (this.muted) return;
     try {
-      const Audio = window.AudioContext || window.webkitAudioContext;
-      if (!Audio) return;
-      this.context ||= new Audio();
-      if (this.context.state === 'suspended') this.context.resume().catch(() => {});
+      this.prepare();
+      if (this.context?.state === 'suspended') this.context.resume().then(() => this.warm()).catch(() => {});
+      else this.warm();
     } catch { /* The visual feedback still works when audio is unavailable. */ }
   }
 
