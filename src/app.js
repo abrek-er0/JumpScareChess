@@ -45,8 +45,17 @@ const pressureClock = new TurnClock({
     $('pressure-time').classList.toggle('urgent', seconds <= 3);
   },
   onExpire: () => pressureTimeout(),
-  onRunChange: running => running ? audio.startPressure() : audio.pausePressure(),
+  onRunChange: running => {
+    $('pressure-control').classList.toggle('running', running);
+    if (running) audio.startPressure();
+    else audio.pausePressure();
+  },
 });
+
+function resetPressureDisplay() {
+  $('pressure-time').textContent = '10s';
+  $('pressure-time').classList.remove('urgent');
+}
 
 try {
   const saved = JSON.parse(localStorage.getItem('jumpscare-preferences') || '{}');
@@ -114,7 +123,6 @@ function syncControls() {
   $('pressure-toggle').setAttribute('aria-pressed', pressureMode);
   $('pressure-toggle').setAttribute('aria-label', pressureMode ? 'Turn off pressure mode' : 'Turn on pressure mode');
   $('pressure-toggle').title = pressureMode ? 'Pressure mode on: 10 seconds per move after your first move' : 'Pressure mode off';
-  $('pressure-label').hidden = !pressureMode;
 }
 
 function setEvaluation(score, perspective = game.turn()) {
@@ -172,7 +180,7 @@ function renderBoard() {
 
 function cancelWork() {
   pressureClock.stop();
-  $('pressure-time').hidden = true;
+  resetPressureDisplay();
   version++;
   controller.abort();
   controller = new AbortController();
@@ -215,7 +223,7 @@ async function getAnalysis(position, token) {
 function showError(error, token) {
   if (token !== version || error.name === 'AbortError') return;
   pressureClock.stop();
-  $('pressure-time').hidden = true;
+  resetPressureDisplay();
   phase = 'error';
   setStatus('Could not prepare this position', error.message, 'error');
   renderBoard();
@@ -284,12 +292,11 @@ function enablePlayerTurn(preloaded) {
   setStatus(game.isCheck() ? 'You’re in check. Find your move.' : 'Your move. Make it count.', '', 'ready');
   renderBoard();
   if (pressureMode && safeMoves > 0) {
-    $('pressure-time').hidden = false;
     pressureClock.start();
     if ($('mistakes-dialog').open) pressureClock.pause();
   } else {
     pressureClock.stop();
-    $('pressure-time').hidden = true;
+    resetPressureDisplay();
   }
 }
 
@@ -311,7 +318,7 @@ function restart({ increment = false } = {}) {
 function finishIfOver() {
   if (!game.isGameOver()) return false;
   pressureClock.stop();
-  $('pressure-time').hidden = true;
+  resetPressureDisplay();
   setEvaluation(game.isCheckmate() ? { type: 'mate', value: 0 } : { type: 'cp', value: 0 });
   saveEnding(game.isCheckmate() ? (game.turn() === side ? 'loss' : 'win') : 'draw');
   phase = 'finished';
@@ -337,7 +344,7 @@ function saveEnding(outcome) {
 
 function blunder(loss, chosen) {
   pressureClock.stop();
-  $('pressure-time').hidden = true;
+  resetPressureDisplay();
   phase = 'scare';
   saveEnding('blunder');
   $('scare-title').textContent = 'THAT’S A BLUNDER.';
@@ -352,7 +359,6 @@ function blunder(loss, chosen) {
 function pressureTimeout() {
   if (phase !== 'ready' || !pressureMode) return;
   phase = 'scare';
-  $('pressure-time').hidden = true;
   $('scare-title').textContent = 'TIME’S UP.';
   $('scare-detail').textContent = 'Your 10 seconds ran out.';
   $('scare').hidden = false;
@@ -366,7 +372,7 @@ function playMove(move) {
   const chosen = analysis.scores.get(toUci(move));
   if (!chosen) return;
   pressureClock.stop();
-  $('pressure-time').hidden = true;
+  resetPressureDisplay();
   const loss = moveLoss(analysis.best, chosen);
   const feedback = describeMove(loss, tolerance, chosen, analysis.best);
   const token = version;
@@ -540,12 +546,11 @@ $('pressure-toggle').addEventListener('click', () => {
   syncControls();
   savePreferences();
   if (pressureMode && phase === 'ready' && safeMoves > 0) {
-    $('pressure-time').hidden = false;
     pressureClock.start();
     if ($('mistakes-dialog').open) pressureClock.pause();
   } else {
     pressureClock.stop();
-    $('pressure-time').hidden = true;
+    resetPressureDisplay();
   }
 });
 $('my-mistakes').addEventListener('click', () => pressureClock.pause());

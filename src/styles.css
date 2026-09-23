@@ -21,9 +21,11 @@
 .pressure-toggle { display: grid; place-items: center; width: 22px; height: 22px; padding: 2px; border: 1px solid #adc2db; border-radius: 5px; background: #eaf2fd; color: #5680b6; }
 .pressure-toggle[aria-pressed=false] { border-color: #e0e5ec; background: #f3f5f8; color: #a9b2be; }
 .pressure-toggle svg { width: 16px; height: 16px; }
+.pressure-control { display: flex; align-items: center; gap: 8px; margin-top: 16px; }
 .pressure-label { color: #6c819d; font-size: 10px; font-weight: 600; white-space: nowrap; }
-.pressure-time { min-width: 25px; color: #be4a55; font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
-.pressure-time.urgent { color: #e12539; animation: breathe .55s ease-in-out infinite; }
+.pressure-time { min-width: 25px; color: #a7b0bc; font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
+.pressure-control.running .pressure-time { color: #be4a55; }
+.pressure-control.running .pressure-time.urgent { color: #e12539; animation: breathe .55s ease-in-out infinite; }
 .board-caption:has(#board-hint:empty):has(#retry[hidden]) { display: none; }
 @media (max-width: 600px) {
   .opponent-line { flex-wrap: wrap; gap: 12px; }
