@@ -22,7 +22,7 @@ let sidePreference = 'random';
 let side = 'w';
 let tolerance = 50;
 let depth = 11;
-let pressureMode = true;
+let pressureMode = false;
 let selected = null;
 let legalTargets = [];
 let phase = 'loading';
@@ -52,7 +52,9 @@ try {
   const saved = JSON.parse(localStorage.getItem('jumpscare-preferences') || '{}');
   if (Number.isFinite(saved.tolerance)) tolerance = Math.max(10, Math.min(300, Math.round(saved.tolerance / 10) * 10));
   if (Number.isFinite(saved.depth)) depth = Math.max(6, Math.min(18, Math.round(saved.depth)));
-  pressureMode = saved.pressure !== false;
+  // The former default was on. Migrate that saved value once so existing
+  // players see the new off-by-default behavior; later choices persist.
+  pressureMode = saved.pressureDefaultVersion === 2 && saved.pressure === true;
   // Previous builds saved the old defaults as preferences. Update those once,
   // while retaining any values the player deliberately set elsewhere.
   if (saved.settingsDefaultVersion !== 2) {
@@ -70,7 +72,7 @@ window.addEventListener('pointerdown', () => audio.unlock(), { once: true });
 window.addEventListener('keydown', () => audio.unlock(), { once: true });
 
 function savePreferences() {
-  try { localStorage.setItem('jumpscare-preferences', JSON.stringify({ tolerance, depth, side: sidePreference, sideDefaultVersion: 2, settingsDefaultVersion: 2, pressure: pressureMode, muted: audio.muted })); } catch { /* Storage can be disabled. */ }
+  try { localStorage.setItem('jumpscare-preferences', JSON.stringify({ tolerance, depth, side: sidePreference, sideDefaultVersion: 2, settingsDefaultVersion: 2, pressure: pressureMode, pressureDefaultVersion: 2, muted: audio.muted })); } catch { /* Storage can be disabled. */ }
 }
 
 function setStatus(message, hint, state = 'busy') {
@@ -112,6 +114,7 @@ function syncControls() {
   $('pressure-toggle').setAttribute('aria-pressed', pressureMode);
   $('pressure-toggle').setAttribute('aria-label', pressureMode ? 'Turn off pressure mode' : 'Turn on pressure mode');
   $('pressure-toggle').title = pressureMode ? 'Pressure mode on: 10 seconds per move after your first move' : 'Pressure mode off';
+  $('pressure-label').hidden = !pressureMode;
 }
 
 function setEvaluation(score, perspective = game.turn()) {
