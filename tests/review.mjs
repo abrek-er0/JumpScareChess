@@ -167,7 +167,7 @@ test('Straight and knight shafts stop behind their heads in both board orientati
 });
 
 let copiedFen = null;
-globalThis.navigator = { clipboard: { writeText: async value => { copiedFen = value; } } };
+Object.defineProperty(globalThis, 'navigator', { configurable: true, value: { clipboard: { writeText: async value => { copiedFen = value; } } } });
 review.select(ending);
 await $('copy-fen').click();
 assert(copiedFen === ending.beforeFen && $('copy-fen-label').textContent === 'Copied!', 'Reset position FEN was not copied');
