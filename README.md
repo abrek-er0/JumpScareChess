@@ -44,16 +44,10 @@ Click or drag pieces to move. Arrow keys navigate the board; Enter selects a squ
 
 ## Tests
 
-Run the rules, engine-selection, and history regression suite with Node.js:
+Run all regression suites with Node.js 24+ (no dependency installation needed):
 
 ```sh
-node --experimental-default-type=module tests/core.mjs
-node --experimental-default-type=module tests/preload.mjs
-node --experimental-default-type=module tests/openings.mjs
-node --experimental-default-type=module tests/review.mjs
-node --experimental-default-type=module tests/platform.mjs
-node --experimental-default-type=module tests/browser/runtime.mjs
-node --experimental-default-type=module tests/browser/service-worker.mjs
+npm test
 ```
 
 On macOS, the system JavaScriptCore runner also works:

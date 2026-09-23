@@ -26,10 +26,7 @@ jobs:
           node-version: '24'
           package-manager-cache: false
       - name: Test
-        run: |
-          for test in tests/*.mjs tests/browser/*.mjs; do
-            node --experimental-default-type=module "$test"
-          done
+        run: npm test
       - name: Assemble static files
         run: |
           mkdir -p _site
