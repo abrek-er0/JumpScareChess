@@ -1,6 +1,6 @@
 # Jumpscare Chess
 
-How long can you go without doing a blunder?
+How long can you go without doing a blunder? Try it on: https://abrek-er0.github.io/JumpScareChess/
 
 ## Preview locally
 
