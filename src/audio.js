@@ -56,12 +56,16 @@ export class GameAudio {
     const time = this.context.currentTime;
     const master = this.context.createGain();
     const compressor = this.context.createDynamicsCompressor();
+    compressor.threshold.value = -18;
+    compressor.ratio.value = 8;
     master.gain.setValueAtTime(0, time);
-    master.gain.linearRampToValueAtTime(0.52, time + 0.008);
-    master.gain.setValueAtTime(0.52, time + 0.55);
+    master.gain.linearRampToValueAtTime(0.8, time + 0.008);
+    master.gain.setValueAtTime(0.8, time + 0.55);
     master.gain.exponentialRampToValueAtTime(0.001, time + 0.95);
     master.connect(compressor).connect(this.context.destination);
-    for (const frequency of [95, 143]) {
+    // The higher layer carries on small laptop and phone speakers, where the
+    // original low frequencies can be much quieter than intended.
+    for (const frequency of [95, 143, 420]) {
       const oscillator = this.context.createOscillator();
       oscillator.type = 'sawtooth';
       oscillator.frequency.setValueAtTime(frequency, time);
