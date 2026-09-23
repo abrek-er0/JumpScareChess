@@ -1,3 +1,5 @@
+<img src="assets/jumpscare-chess-logo.png" alt="Jumpscare Chess logo" width="420">
+
 # Jumpscare Chess
 
 How long can you go without doing a blunder? Try it on: https://abrek-er0.github.io/JumpScareChess/
